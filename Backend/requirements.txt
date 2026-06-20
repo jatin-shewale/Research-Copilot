@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy
+asyncpg
+aiohttp
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic
+email-validator
+numpy
+scikit-learn
+sentence-transformers
+hdbscan
+networkx
+python-dotenv
