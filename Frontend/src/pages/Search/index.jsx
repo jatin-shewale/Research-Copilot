@@ -39,14 +39,20 @@ export default function SearchPage() {
   return (
     <PageTransition>
       <div className="container-page py-12">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-5xl text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">Research</p>
           <h1 className="mt-2 font-display text-3xl font-bold text-text sm:text-4xl">Start a new research run</h1>
           <p className="mt-3 text-sm text-muted">
             Describe what you want to understand. Research Copilot will retrieve, rank, extract and synthesize the relevant literature.
           </p>
           <div className="mt-8">
-            <SearchBar onSearch={handleSearch} loading={status === 'processing'} initialValue={query} size="lg" />
+            <SearchBar
+              onSearch={handleSearch}
+              loading={status === 'processing'}
+              initialValue={query}
+              size="lg"
+              className="mx-auto max-w-5xl"
+            />
           </div>
         </div>
 
@@ -63,7 +69,7 @@ export default function SearchPage() {
         )}
 
         {(status === 'processing' || status === 'completed') && (
-          <div className="mx-auto mt-12 max-w-3xl">
+          <div className="mx-auto mt-12 max-w-5xl">
             {status === 'processing' && <PipelineProgress activeStageIndex={activeStageIndex} status={status} />}
 
             {status === 'completed' && results && (

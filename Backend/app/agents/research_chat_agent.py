@@ -1,10 +1,9 @@
 import logging
+import re
+from collections import Counter
 from typing import List, Dict, Any, Optional
-from app.utils.embedding import get_embeddings
 from app.utils.llm import call_llm
 from app.prompts.research_chat import RESEARCH_CHAT_PROMPT
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +33,12 @@ class ResearchChatAgent:
                 "confidence": 0.0
             }
 
-        # Retrieve relevant papers based on question similarity
+        # Keep the chat path fast: use lightweight scoring instead of embeddings.
         try:
-            relevant_papers = await self._retrieve_relevant_papers(question, papers, top_k=5)
+            relevant_papers = self._retrieve_relevant_papers(question, papers, top_k=3)
         except Exception as e:
             logger.error(f"Error retrieving relevant papers: {e}")
-            relevant_papers = papers[:5]  # Fallback to first 5 papers
+            relevant_papers = papers[:3]  # Fallback to first 3 papers
 
         # Prepare context from relevant papers
         context = self._prepare_context(relevant_papers)
@@ -63,34 +62,23 @@ class ResearchChatAgent:
         top_k: int = 5
     ) -> List[Dict[str, Any]]:
         """
-        Retrieve the most relevant papers for a given question using embedding similarity.
+        Retrieve the most relevant papers for a given question using lightweight token overlap.
         """
-        # Get embedding for the question
-        question_embedding = await get_embeddings([question])
-        question_vector = np.array(question_embedding)
-
-        # Get embeddings for paper abstracts
-        abstracts = [paper.get('abstract', '') for paper in papers]
-        if not abstracts:
+        if not papers:
             return papers[:top_k]
 
-        abstract_embeddings = await get_embeddings(abstracts)
-        abstract_vectors = np.array(abstract_embeddings)
+        question_tokens = self._tokenize(question)
+        if not question_tokens:
+            return papers[:top_k]
 
-        # Compute cosine similarity
-        similarities = cosine_similarity(question_vector, abstract_vectors)[0]
+        scored = []
+        for paper in papers:
+            paper_copy = paper.copy()
+            paper_copy['similarity_score'] = self._score_paper(paper_copy, question_tokens)
+            scored.append(paper_copy)
 
-        # Get top-k indices
-        top_indices = np.argsort(similarities)[::-1][:top_k]
-
-        # Return the top papers with their similarity scores
-        relevant_papers = []
-        for idx in top_indices:
-            paper = papers[idx].copy()
-            paper['similarity_score'] = float(similarities[idx])
-            relevant_papers.append(paper)
-
-        return relevant_papers
+        scored.sort(key=lambda item: item.get('similarity_score', 0), reverse=True)
+        return scored[:top_k]
 
     def _prepare_context(self, papers: List[Dict[str, Any]]) -> str:
         """
@@ -98,15 +86,20 @@ class ResearchChatAgent:
         """
         context_parts = []
         for i, paper in enumerate(papers, 1):
+            title = str(paper.get('title', 'N/A'))[:140]
+            abstract = str(paper.get('abstract', 'N/A'))[:700]
+            problem = str(paper.get('problem', 'N/A'))[:180]
+            method = str(paper.get('method', 'N/A'))[:180]
+            results = str(paper.get('results', 'N/A'))[:180]
             context_part = f"""
 [Paper {i}]
-Title: {paper.get('title', 'N/A')}
+Title: {title}
 Authors: {', '.join(paper.get('authors', [])) if isinstance(paper.get('authors'), list) else paper.get('authors', 'N/A')}
-Abstract: {paper.get('abstract', 'N/A')}
+Abstract: {abstract}
 Key Points:
-- Problem: {paper.get('problem', 'N/A')}
-- Method: {paper.get('method', 'N/A')}
-- Results: {paper.get('results', 'N/A')}
+- Problem: {problem}
+- Method: {method}
+- Results: {results}
 """
             context_parts.append(context_part)
         return "\n---\n".join(context_parts)
@@ -123,8 +116,10 @@ Key Points:
         # Prepare chat history if available
         history_text = ""
         if chat_history:
-            for turn in chat_history[-3:]:  # Last 3 turns
-                history_text += f"Human: {turn.get('human', '')}\nAssistant: {turn.get('assistant', '')}\n"
+            for turn in chat_history[-2:]:  # Last 2 turns to keep the prompt lean
+                human = turn.get('human', turn.get('content', ''))
+                assistant = turn.get('assistant', '')
+                history_text += f"Human: {str(human)[:300]}\nAssistant: {str(assistant)[:300]}\n"
 
         # Prepare the prompt
         prompt = RESEARCH_CHAT_PROMPT.format(
@@ -134,7 +129,7 @@ Key Points:
         )
 
         # Call LLM
-        response = await call_llm(prompt, temperature=0.5)
+        response = await call_llm(prompt, temperature=0.3, max_tokens=700)
 
         # Extract answer and citations (simplified)
         # In a more advanced version, we would parse citations from the response
@@ -149,3 +144,20 @@ Key Points:
             "citations": citations,
             "confidence": 0.8  # Placeholder confidence
         }
+
+    @staticmethod
+    def _tokenize(text: str) -> List[str]:
+        return [token for token in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(token) > 2]
+
+    def _score_paper(self, paper: Dict[str, Any], question_tokens: List[str]) -> float:
+        text = " ".join(
+            str(paper.get(field, "") or "")
+            for field in ("title", "abstract", "problem", "method", "results", "categories")
+        ).lower()
+        paper_tokens = Counter(self._tokenize(text))
+        if not paper_tokens:
+            return 0.0
+
+        overlap = sum(1 for token in question_tokens if token in paper_tokens)
+        title_bonus = sum(1 for token in question_tokens if token in self._tokenize(str(paper.get("title", ""))))
+        return overlap + (title_bonus * 0.75)

@@ -1,19 +1,19 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.api.deps import get_db_session, get_current_active_user
 from app.db.models.user import User as UserModel
 from app.db.crud.search_history import create_search_history, update_search_history, get_user_search_history
 from app.db.schemas.search_history import SearchHistoryCreate
-from app.core.config import settings
+from app.core.database import get_engine
 import uuid
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# In-memory store for search tasks (in production, use Redis or a database)
+# In-memory store for search tasks.
 search_tasks = {}
 
 @router.post("/", response_model=dict)
@@ -103,8 +103,8 @@ async def run_research_pipeline(search_id: str, query: str, user_id: int):
     """
     from app.pipelines.research_pipeline import ResearchPipeline
 
-    # Create a new database session for this background task
-    engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+    # Reuse the shared database engine for the background task.
+    engine = get_engine()
     AsyncSessionLocal = sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )

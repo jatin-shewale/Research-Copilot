@@ -9,7 +9,6 @@ import ReadingMapPage from '../pages/ReadingMap'
 import TimelinePage from '../pages/Timeline'
 import ResearchChatPage from '../pages/ResearchChat'
 import PaperDetailsPage from '../pages/PaperDetails'
-import SettingsPage from '../pages/Settings'
 import NotFoundPage from '../pages/NotFound'
 
 export default function AppRoutes() {
@@ -27,7 +26,6 @@ export default function AppRoutes() {
           <Route path="/chat" element={<ResearchChatPage />} />
           <Route path="/papers" element={<Navigate to="/dashboard" replace />} />
           <Route path="/paper/:paperId" element={<PaperDetailsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

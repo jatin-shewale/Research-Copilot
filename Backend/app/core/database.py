@@ -11,11 +11,16 @@ def get_async_session_local():
     global engine, AsyncSessionLocal
 
     if AsyncSessionLocal is None:
+        connect_args = {}
+        if str(settings.SQLALCHEMY_DATABASE_URI).startswith("sqlite"):
+            connect_args = {"check_same_thread": False}
+
         engine = create_async_engine(
             str(settings.SQLALCHEMY_DATABASE_URI),
             echo=settings.DEBUG,
             future=True,
             pool_pre_ping=True,
+            connect_args=connect_args,
         )
         AsyncSessionLocal = sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False

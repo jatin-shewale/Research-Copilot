@@ -4,23 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FiMenu, FiX, FiActivity } from 'react-icons/fi'
 import clsx from 'clsx'
 import { NAV_LINKS, APP_NAME } from '../../constants'
-import { useBackendHealth } from '../../hooks/useBackendHealth'
-
-function StatusDot() {
-  const { data, isError } = useBackendHealth()
-  const healthy = !isError && data?.status === 'healthy'
-  return (
-    <span className="hidden items-center gap-1.5 rounded-full border border-border bg-slate-50 px-2.5 py-1 text-xs font-medium text-muted lg:flex">
-      <span
-        className={clsx(
-          'h-1.5 w-1.5 rounded-full',
-          healthy ? 'bg-success animate-pulse-soft' : 'bg-danger'
-        )}
-      />
-      {healthy ? 'Backend online' : 'Backend offline'}
-    </span>
-  )
-}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -54,7 +37,6 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <StatusDot />
             <Link to="/search" className="btn-primary hidden sm:inline-flex">
               New Research
             </Link>

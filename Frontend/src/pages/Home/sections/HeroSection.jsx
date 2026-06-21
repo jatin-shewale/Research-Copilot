@@ -37,7 +37,7 @@ export default function HeroSection() {
       ))}
 
       <div className="container-page relative py-24 sm:py-32">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-5xl text-center">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -71,9 +71,9 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mx-auto mt-10 max-w-2xl"
+            className="mx-auto mt-10 max-w-5xl"
           >
-            <SearchBar onSearch={handleSearch} size="lg" />
+            <SearchBar onSearch={handleSearch} size="lg" className="mx-auto max-w-5xl" />
           </motion.div>
 
           <motion.div

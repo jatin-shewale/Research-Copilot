@@ -1,10 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiSearch, FiArrowRight } from 'react-icons/fi'
 import { SEARCH_SUGGESTIONS } from '../../constants'
 
-export default function SearchBar({ onSearch, loading, initialValue = '', size = 'lg' }) {
+export default function SearchBar({
+  onSearch,
+  loading,
+  initialValue = '',
+  size = 'lg',
+  className = '',
+  inputClassName = '',
+  buttonClassName = '',
+}) {
   const [value, setValue] = useState(initialValue)
+
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -14,23 +26,31 @@ export default function SearchBar({ onSearch, loading, initialValue = '', size =
   const isLg = size === 'lg'
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${className}`.trim()}>
       <form onSubmit={handleSubmit} className="relative">
-        <FiSearch className={`pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-muted ${isLg ? 'h-5 w-5' : 'h-4 w-4'}`} />
+        <FiSearch
+          className={`pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-muted ${
+            isLg ? 'h-5 w-5' : 'h-4 w-4'
+          }`}
+        />
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Ask about a research topic — e.g. “How do diffusion models compare to GANs?”"
-          className={`input-field shadow-card ${isLg ? 'h-14 pl-12 pr-32 text-base rounded-2xl' : 'h-11 pl-10 pr-24'}`}
+          placeholder="Ask about a research topic — e.g. How do diffusion models compare to GANs?"
+          className={`input-field w-full shadow-card ${
+            isLg ? 'h-14 rounded-2xl pl-12 pr-32 text-base' : 'h-11 pl-10 pr-24'
+          } ${inputClassName}`.trim()}
           disabled={loading}
         />
         <motion.button
           type="submit"
           whileTap={{ scale: 0.96 }}
           disabled={loading || !value.trim()}
-          className={`btn-primary absolute right-2 top-1/2 -translate-y-1/2 ${isLg ? 'h-10 px-5' : 'h-8 px-3.5 text-xs'}`}
+          className={`btn-primary absolute right-2 top-1/2 -translate-y-1/2 ${
+            isLg ? 'h-10 px-5' : 'h-8 px-3.5 text-xs'
+          } ${buttonClassName}`.trim()}
         >
-          {loading ? 'Researching…' : 'Research'}
+          {loading ? 'Researchingâ€¦' : 'Research'}
           {!loading && <FiArrowRight className="h-4 w-4" />}
         </motion.button>
       </form>

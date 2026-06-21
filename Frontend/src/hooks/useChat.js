@@ -15,7 +15,9 @@ export function useChat(searchId) {
       addMessage(searchId, userMessage)
       setTyping(true)
       try {
-        const chatHistory = getMessages(searchId).map((m) => ({ role: m.role, content: m.content }))
+        const chatHistory = getMessages(searchId)
+          .slice(-4)
+          .map((m) => ({ role: m.role, content: m.content }))
         const response = await chatService.sendChatMessage({ searchId, question, chatHistory })
         addMessage(searchId, {
           role: 'assistant',

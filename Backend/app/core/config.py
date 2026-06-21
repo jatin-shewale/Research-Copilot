@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
+        extra="ignore",
     )
 
     PROJECT_NAME: str = "Research Copilot"
@@ -20,13 +21,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # Database
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_DB: str = "researchcopilot"
-    POSTGRES_PORT: str = "5432"
-
-    SQLALCHEMY_DATABASE_URI: Union[str, None] = None
+    SQLALCHEMY_DATABASE_URI: str = "sqlite+aiosqlite:///./research_copilot.db"
 
     @field_validator("DEBUG", mode="before")
     @classmethod
@@ -40,23 +35,6 @@ class Settings(BaseSettings):
             if normalized in {"0", "false", "f", "no", "n", "off", "release", "prod", "production"}:
                 return False
         return bool(v)
-
-    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
-    @classmethod
-    def assemble_db_connection(cls, v: Any, info):
-        if isinstance(v, str):
-            return v
-
-        data = info.data
-
-        return (
-            f"postgresql+asyncpg://"
-            f"{data.get('POSTGRES_USER')}:"
-            f"{data.get('POSTGRES_PASSWORD')}@"
-            f"{data.get('POSTGRES_SERVER')}:"
-            f"{data.get('POSTGRES_PORT')}/"
-            f"{data.get('POSTGRES_DB')}"
-        )
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
@@ -80,11 +58,6 @@ class Settings(BaseSettings):
             ]
         return list(v) if v else []
 
-    # Redis
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: Union[str, None] = None
-
     # ChromaDB
     CHROMA_HOST: str = "localhost"
     CHROMA_PORT: int = 8000
@@ -95,7 +68,7 @@ class Settings(BaseSettings):
 
     # arXiv
     ARXIV_API_URL: str = "http://export.arxiv.org/api/query"
-    ARXIV_MAX_RESULTS: int = 100
+    ARXIV_MAX_RESULTS: int = 12
 
     # Embeddings
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-large-en-v1.5"

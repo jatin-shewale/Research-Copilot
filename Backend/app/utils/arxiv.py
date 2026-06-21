@@ -23,7 +23,8 @@ async def fetch_papers_from_arxiv(search_query: str, max_results: int = 100) -> 
         "sortOrder": "descending"
     }
 
-    async with aiohttp.ClientSession() as session:
+    timeout = aiohttp.ClientTimeout(total=20)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         try:
             async with session.get(settings.ARXIV_API_URL, params=params) as response:
                 if response.status != 200:

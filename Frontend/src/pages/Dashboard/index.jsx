@@ -6,9 +6,11 @@ import StatCard from '../../components/cards/StatCard'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import ErrorState from '../../components/ui/ErrorState'
 import EmptyState from '../../components/ui/EmptyState'
+import SearchBar from '../../components/search/SearchBar'
 import AnalyticsAreaChart from '../../components/charts/AnalyticsAreaChart'
 import AnalyticsPieChart from '../../components/charts/AnalyticsPieChart'
 import Badge from '../../components/ui/Badge'
+import useResearchPipeline from '../../hooks/useResearchPipeline'
 import { useAnalytics } from '../../hooks/useAnalytics'
 import { useSearchHistory } from '../../hooks/useSearchHistory'
 import { useSearchStore } from '../../store/searchStore'
@@ -30,6 +32,7 @@ export default function DashboardPage() {
   const { data: analytics, isLoading: loadingAnalytics, isError: analyticsError, refetch: refetchAnalytics } = useAnalytics()
   const { data: history, isLoading: loadingHistory } = useSearchHistory()
   const resumeSearch = useSearchStore((s) => s.startSearch)
+  const { run, status: pipelineStatus } = useResearchPipeline()
 
   const series = buildActivitySeries(history)
   const statusBreakdown = ['completed', 'processing', 'failed'].map((status) => ({
@@ -55,6 +58,19 @@ export default function DashboardPage() {
             </Link>
           }
         />
+
+        <div className="mt-8 card-surface p-5 sm:p-6">
+          <div className="mb-4 flex flex-col gap-1">
+            <h3 className="font-display text-base font-semibold text-text">Quick Research</h3>
+            <p className="text-sm text-muted">Start a new search from the dashboard without leaving the page.</p>
+          </div>
+          <SearchBar
+            onSearch={run}
+            loading={pipelineStatus === 'processing'}
+            size="lg"
+            className="max-w-5xl"
+          />
+        </div>
 
         {analyticsError ? (
           <div className="mt-8">

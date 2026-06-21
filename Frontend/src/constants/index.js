@@ -10,7 +10,6 @@ export const NAV_LINKS = [
   { label: 'Reading Map', path: '/reading-map' },
   { label: 'Timeline', path: '/timeline' },
   { label: 'Chat', path: '/chat' },
-  { label: 'Settings', path: '/settings' },
 ]
 
 export const PIPELINE_STAGES = [

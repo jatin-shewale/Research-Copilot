@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import verify_token
-from app.core.security import get_password_hash
 from app.db.crud.user import get_user_by_username
 from app.db.models.user import User as UserModel
 from app.db.schemas.user import TokenData
@@ -38,31 +37,7 @@ async def get_db_session() -> Generator:
         yield session
 
 async def get_guest_user(db: AsyncSession) -> UserModel:
-    try:
-        existing = await get_user_by_username(db, username=GUEST_USERNAME)
-        if existing:
-            return existing
-
-        guest_user = UserModel(
-            username=GUEST_USERNAME,
-            email=GUEST_EMAIL,
-            full_name=GUEST_FULL_NAME,
-            hashed_password=get_password_hash(GUEST_PASSWORD),
-            is_active=True,
-            is_superuser=False,
-        )
-
-        db.add(guest_user)
-        await db.commit()
-        await db.refresh(guest_user)
-        return guest_user
-    except (IntegrityError, Exception) as exc:
-        logger.warning("Falling back to transient guest user: %s", exc)
-        try:
-            await db.rollback()
-        except Exception:
-            pass
-        return _guest_user_stub()
+    return _guest_user_stub()
 
 async def get_current_user(
     token: str | None = Depends(oauth2_scheme),

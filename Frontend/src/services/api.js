@@ -6,7 +6,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 300000,
 })
 
 // Request interceptor — attaches a bearer token if present.

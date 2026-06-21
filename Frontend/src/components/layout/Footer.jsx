@@ -44,7 +44,6 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-text">Resources</h4>
             <ul className="mt-4 space-y-2.5">
-              <li><Link to="/settings" className="text-sm text-muted hover:text-primary">System Status</Link></li>
               <li><a href="https://arxiv.org" target="_blank" rel="noreferrer" className="text-sm text-muted hover:text-primary">arXiv.org</a></li>
               <li><Link to="/dashboard" className="text-sm text-muted hover:text-primary">Dashboard</Link></li>
             </ul>
